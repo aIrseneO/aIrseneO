@@ -2,7 +2,7 @@
 
 - 🔭 I’m currently contributing to Open Source Projects.
 - 🌱 I’m learning at [The Linux Foundation](https://training.linuxfoundation.org/).
-- 👯 I’m looking to collaborate on DeVops projects.
+- :trollface: I’m looking to collaborate on DeVops projects.
 
 ### Connect with me:
 
