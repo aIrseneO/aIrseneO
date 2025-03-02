@@ -11,6 +11,7 @@ COMMANDS_LIST=(
 option_user=false
 option_orgs=""
 option_exorgs="42-ready-player-hackathon"
+option_repos=""
 option_dir="$HOME/workplace"
 
 # Function to display the help message
@@ -22,6 +23,7 @@ usage() {
     echo "  --user              Limit the scope to user repositories only"
     echo "  --orgs <args>       Select specific organizations. Comma separate list"
     echo "  --exorgs <args>     Exclude specific organizations. Comma separate list"
+    echo "  --repos <args>      Select specific repositories. Comma separate list"
     echo "  --dir <arg>         Set the target directory where repository will be cloned (default $HOME/workplace)"
     echo "  --                  Stop parsing options (useful for positional args starting with '-')"
     echo
@@ -46,7 +48,7 @@ while [[ $# -gt 0 ]]; do
             option_orgs="$2"
             shift 2
         else
-            echo "Error: -orgs requires an argument."
+            echo "Error: --orgs requires an argument."
             usage
         fi
         ;;
@@ -55,7 +57,16 @@ while [[ $# -gt 0 ]]; do
             option_exorgs="$2"
             shift 2
         else
-            echo "Error: -exorgs requires an argument."
+            echo "Error: --exorgs requires an argument."
+            usage
+        fi
+        ;;
+        --repos)
+        if [[ -n "$2" && "$2" != -* ]]; then
+            option_repos="$2"
+            shift 2
+        else
+            echo "Error: --repos requires an argument."
             usage
         fi
         ;;
@@ -165,6 +176,18 @@ check_organization() {
     fi
 }
 
+# Check if the repository is in the list of repositories to be included or excluded
+#
+check_repository() {
+    local REPOSITORY=$1
+
+    if [[ -z $option_repos || ${option_repos[@]} =~ $REPOSITORY ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
 # Create workplace
 #
 create_workplace() {
@@ -175,7 +198,9 @@ create_workplace() {
             REPOSITORIES=$(get_repos $ORGANIZATION)
             echo "╭───────────$ORGANIZATION:"
             for REPOSITORY in $REPOSITORIES; do
-                clone_repository $ORGANIZATION $REPOSITORY
+                if check_repository $REPOSITORY; then
+                    clone_repository $ORGANIZATION $REPOSITORY
+                fi
             done;
             echo "╰────────────────────────────── ▪ ▪ ▪"
         fi
@@ -190,7 +215,12 @@ show_repositories() {
     for ORGANIZATION in $ORGANIZATIONS; do
         if check_organization $ORGANIZATION; then
             echo "╭───────────$ORGANIZATION:"
-            echo "$(get_repos $ORGANIZATION)"
+            REPOSITORIES=$(get_repos $ORGANIZATION)
+            for REPOSITORY in $REPOSITORIES; do
+                if check_repository $REPOSITORY; then
+                    echo "│ $REPOSITORY"
+                fi
+            done;
             echo "╰──────────────────────────────╯"
 
         fi
